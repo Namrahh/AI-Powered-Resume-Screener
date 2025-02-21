@@ -48,27 +48,32 @@ View the ranked results based on semantic similarity.
 4. Fetch Resumes from Email
 
 # Dependencies
-Python 3.8+
+The project requires the following Python packages:
 
-Libraries:
+Python 3.8+: The project is built using Python 3.8 or higher.
 
-gradio
+# Libraries:
 
-sentence-transformers
+gradio: For building the user interface.
 
-pdfplumber
+sentence-transformers: For computing semantic similarity.
 
-python-docx
+pdfplumber: For extracting text from PDF files.
 
-pandas
+python-docx: For extracting text from DOCX files.
 
-scikit-learn
+pandas: For data manipulation (if needed).
 
-torch
+scikit-learn: For machine learning utilities (if needed).
 
-python-dotenv
+torch: For deep learning (required by sentence-transformers).
 
-spacy
+python-dotenv: For loading environment variables from .env.
+
+spacy: For advanced text processing.
+
+All dependencies are listed in the requirements.txt file. You can install them using:
+pip install -r requirements.txt
 
 # Contributing
 Contributions are welcome! If you'd like to contribute, please follow these steps:
