@@ -1,0 +1,9 @@
+gradio==3.0.0
+sentence-transformers==2.2.2
+pdfplumber==0.9.0
+python-docx==0.8.11
+pandas==2.0.0
+scikit-learn==1.2.0
+torch==2.0.0
+python-dotenv==1.0.0
+spacy==3.7.0
