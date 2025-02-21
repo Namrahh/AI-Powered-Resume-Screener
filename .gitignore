@@ -1,0 +1,30 @@
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Dataset files (resumes, job descriptions, etc.)
+*.pdf
+*.docx
+*.zip
+*.csv
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Pre-trained models (if they are large)
+models/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE-specific files
+.vscode/
+.idea/
