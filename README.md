@@ -5,11 +5,12 @@ An automated resume screening tool that parses resumes, matches them against job
 This project is an **AI-powered resume screening tool** that automates the process of shortlisting candidates based on job descriptions. It uses **Natural Language Processing (NLP)** and **machine learning** to extract information from resumes, compute semantic similarity, and rank candidates. The system is designed to improve the efficiency and fairness of the hiring process by reducing manual effort and minimizing human bias.
 
 ## Features
-- Resume Parsing: Extracts text from resumes in PDF and DOCX formats.
-- Job Description Matching: Computes semantic similarity between resumes and job descriptions.
-- Gradio UI: Provides an interactive interface for uploading resumes and viewing results.
-- Email Integration: Fetches resumes directly from email attachments.
-- Scalable: Handles a large volume of resumes efficiently.
+✅ Resume Parsing – Extracts text from PDFs and DOCX files using pdfplumber and docx
+✅ Automated Email Integration – Fetches resumes from an email inbox (Gmail IMAP)
+✅ Similarity Scoring – Uses sentence-transformers to rank resumes based on job descriptions
+✅ Duplicate Removal – Ensures unique resumes are processed
+✅ Download Shortlisted Resumes – Provides only the most relevant CVs
+✅ User Interface – Gradio-based interface for easy interaction
 
 ## Installation
 1. **Clone the Repository**:
