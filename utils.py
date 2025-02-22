@@ -1,51 +1,68 @@
 import os
-import imaplib
-import email
-from email.header import decode_header
-from dotenv import load_dotenv
+import pdfplumber
+import docx
+import hashlib
+import shutil
 
-# Load email credentials
-load_dotenv()
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-IMAP_SERVER = "imap.gmail.com"
+def extract_text_from_pdf(pdf_path):
+    """Extract text from a PDF file."""
+    text = ""
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            extracted_text = page.extract_text()
+            if extracted_text:
+                text += extracted_text + "\n"
+    return text.strip()
 
-def fetch_email_resumes():
-    print("Connecting to email server...")
-    try:
-        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-        mail.login(EMAIL_USER, EMAIL_PASS)
-        mail.select("inbox")
-        _, messages = mail.search(None, 'UNSEEN')
-        message_ids = messages[0].split()
+def extract_text_from_docx(docx_path):
+    """Extract text from a DOCX file."""
+    doc = docx.Document(docx_path)
+    return "\n".join([para.text for para in doc.paragraphs]).strip()
 
-        resume_files = []
-        for msg_id in message_ids:
-            _, msg_data = mail.fetch(msg_id, "(RFC822)")
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    for part in msg.walk():
-                        if part.get_content_maintype() == "multipart":
-                            continue
-                        if part.get("Content-Disposition") is None:
-                            continue
-                        filename = part.get_filename()
-                        if filename:
-                            filename = decode_header(filename)[0][0]
-                            if isinstance(filename, bytes):
-                                filename = filename.decode("utf-8")
+def extract_resume_text(file_path):
+    """Determine file type and extract text accordingly."""
+    if file_path.endswith(".pdf"):
+        return extract_text_from_pdf(file_path)
+    elif file_path.endswith(".docx"):
+        return extract_text_from_docx(file_path)
+    return None
 
-                            filepath = os.path.join("resume_documents", filename)
-                            with open(filepath, "wb") as f:
-                                f.write(part.get_payload(decode=True))
+def remove_duplicate_resumes(folder_path="resume_documents"):
+    """Remove duplicate resume files based on content hash."""
+    unique_files = {}
+    duplicate_files = []
 
-                            print(f"Saved attachment: {filename}")
-                            resume_files.append({"filename": filename, "filepath": filepath})
+    for filename in os.listdir(folder_path):
+        filepath = os.path.join(folder_path, filename)
 
-        mail.logout()
-        return resume_files
+        with open(filepath, "rb") as f:
+            file_hash = hashlib.md5(f.read()).hexdigest()
 
-    except Exception as e:
-        print(f"Error: {e}")
-        return []
+        if file_hash not in unique_files:
+            unique_files[file_hash] = filepath
+        else:
+            duplicate_files.append(filepath)
+
+    for dup_file in duplicate_files:
+        os.remove(dup_file)
+        print(f"🗑 Deleted duplicate: {dup_file}")
+
+    print(f"✅ Total unique resumes: {len(unique_files)}")
+    return list(unique_files.values())
+
+def merge_resumes(source_folders, destination_folder):
+    """Merge resumes from multiple folders into one."""
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+
+    for source_folder in source_folders:
+        if os.path.exists(source_folder):
+            for filename in os.listdir(source_folder):
+                source_path = os.path.join(source_folder, filename)
+                destination_path = os.path.join(destination_folder, filename)
+
+                if not os.path.exists(destination_path):
+                    shutil.copy(source_path, destination_path)
+                    print(f"✅ Merged: {filename}")
+                else:
+                    print(f"⚠️ Duplicate skipped: {filename}")
