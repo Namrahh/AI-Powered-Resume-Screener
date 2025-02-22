@@ -1,50 +1,32 @@
 import gradio as gr
-from resume_parser import extract_resume_text, parse_resumes
+import os
+from resume_parser import parse_resumes
 from similarity import compute_similarity
-from utils import fetch_email_resumes
+from utils import remove_duplicate_resumes, merge_resumes
+from email_fetch import fetch_email_resumes
 
-def resume_screening(job_description, resume_files=None):
-    print("✅ Received Job Description")
+# Fetch resumes from email
+email_resumes = fetch_email_resumes()
 
-    # Process uploaded resumes
-    if resume_files:
-        print("📂 Processing uploaded resumes...")
-        resumes = parse_resumes(resume_files)
-    else:
-        resumes = []
+# Merge resumes
+merge_resumes(["/content/drive/MyDrive/Resumes", "/content/drive/MyDrive/archive (1)"], "resume_documents")
 
-    # Fetch resumes from email (if needed)
-    email_resumes = fetch_email_resumes()
-    if email_resumes:
-        resumes.extend(email_resumes)
+# Remove duplicates
+unique_resumes = remove_duplicate_resumes("resume_documents")
 
-    print("🔍 Total resumes being checked:", len(resumes))
+# Parse resumes
+fixed_resumes = parse_resumes(unique_resumes)
 
-    # Compute similarity and shortlist resumes
-    shortlisted_resumes = compute_similarity(job_description, resumes)
+# Define job description
+job_description = """
+Looking for a Python Developer with experience in data analysis.
+Required skills: Python, Pandas, NumPy, Data Cleaning, Data Visualization, SQL,
+Machine Learning, Jupyter Notebook, Data Science.
+"""
 
-    print("✅ Shortlisting done! Found:", len(shortlisted_resumes))
+# Compute similarity
+shortlisted = compute_similarity(job_description, fixed_resumes, 0.4)
 
-    if not shortlisted_resumes:
-        return "No matching resumes found.", []
-
-    # Keep only the top 5 candidates
-    shortlisted_resumes = sorted(shortlisted_resumes, key=lambda x: x[1], reverse=True)[:5]
-
-    print("🏆 Final Top 5:", shortlisted_resumes)
-
-    return "\n".join([f"{res[0]} (Score: {res[1]:.2f})" for res in shortlisted_resumes]), []
-
-# Gradio interface
-iface = gr.Interface(
-    fn=resume_screening,
-    inputs=[
-        gr.Textbox(label="Job Description"),
-        gr.File(file_types=[".pdf", ".docx"], type="filepath", label="Upload Resumes", file_count="multiple")
-    ],
-    outputs=["text", "file"],
-    title="AI Resume Screener",
-    description="Enter a job description and upload resumes (optional) to find the best match."
-)
-
-iface.launch(debug=True)
+# Display results
+for res in shortlisted[:5]:
+    print(f"📄 {res[0]} | Score: {res[1]:.4f} | Path: {res[2]}")
