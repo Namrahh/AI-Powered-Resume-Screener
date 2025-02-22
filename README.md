@@ -6,10 +6,15 @@ This project is an **AI-powered resume screening tool** that automates the proce
 
 ## Features
 ✅ Resume Parsing – Extracts text from PDFs and DOCX files using pdfplumber and docx
+
 ✅ Automated Email Integration – Fetches resumes from an email inbox (Gmail IMAP)
+
 ✅ Similarity Scoring – Uses sentence-transformers to rank resumes based on job descriptions
+
 ✅ Duplicate Removal – Ensures unique resumes are processed
+
 ✅ Download Shortlisted Resumes – Provides only the most relevant CVs
+
 ✅ User Interface – Gradio-based interface for easy interaction
 
 ## Installation
