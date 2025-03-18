@@ -16,7 +16,7 @@ def fetch_email_resumes():
     
     # 🚨 Debugging: Check if email variables are loaded
     print(f"🔍 EMAIL_USER: {EMAIL_USER}")
-    print(f"🔍 EMAIL_PASS: {EMAIL_PASS}")
+
 
     if not EMAIL_USER or not EMAIL_PASS:
         print("❌ EMAIL_USER or EMAIL_PASS is missing! Check your .env file.")
