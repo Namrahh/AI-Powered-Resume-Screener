@@ -17,16 +17,16 @@ def fetch_email_resumes():
         os.makedirs(SAVE_FOLDER)
 
     resume_files = []
-    try:
-    mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-    mail.login(EMAIL_USER, EMAIL_PASS)
-    mail.select("inbox")
+    try:  # ← Make sure this is followed by indented code
+        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+        mail.login(EMAIL_USER, EMAIL_PASS)
+        mail.select("inbox")
 
-    status, messages = mail.search(None, 'UNSEEN')
-    print(f"🔍 IMAP search status: {status}")
-    print(f"📧 Found messages: {messages}")
+        status, messages = mail.search(None, 'UNSEEN')
+        print(f"🔍 IMAP search status: {status}")
+        print(f"📧 Found messages: {messages}")
 
-    message_ids = messages[0].split()
+        message_ids = messages[0].split()
 
         if not message_ids:
             print("🚫 No unread emails with resumes found.")
@@ -36,19 +36,14 @@ def fetch_email_resumes():
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
                         msg = email.message_from_bytes(response_part[1])
-
                         for part in msg.walk():
-                            print(f"🔍 Content Type: {part.get_content_type()}")
-                            print(f"🔍 Content Disposition: {part.get('Content-Disposition')}")
-                            print(f"🔍 Filename: {part.get_filename()}")
+                            if part.get_content_maintype() == "multipart":
+                                continue
+                            if part.get("Content-Disposition") is None:
+                                continue
 
                             filename = part.get_filename()
-                            if filename:
-                                filename = filename.replace("\n", "").strip()
-                            else:
-                                filename = "Unknown_File"
-
-                            if filename.lower().endswith((".pdf", ".doc", ".docx")):
+                            if filename and filename.lower().endswith((".pdf", ".doc", ".docx")):
                                 filepath = os.path.join(SAVE_FOLDER, filename)
 
                                 with open(filepath, "wb") as f:
@@ -58,7 +53,7 @@ def fetch_email_resumes():
                                 resume_files.append(filepath)
 
         mail.logout()
-    except Exception as e:
+    except Exception as e:  # ← Exception handling must also be indented properly
         print(f"❌ Error fetching emails: {e}")
 
     return resume_files
