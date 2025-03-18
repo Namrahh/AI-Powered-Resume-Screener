@@ -33,10 +33,6 @@ with gr.Blocks() as app:
     
     process_button.click(process_resumes, inputs=[job_description], outputs=[output])
 
-# 🚀 Run the app with Railway's assigned port
-app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
-
-
-
-
-
+# 🚀 Keep the app running
+if __name__ == "__main__":
+    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
