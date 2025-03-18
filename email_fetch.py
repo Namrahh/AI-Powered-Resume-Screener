@@ -18,14 +18,15 @@ def fetch_email_resumes():
 
     resume_files = []
     try:
-        print(f"🔍 Connecting to {IMAP_SERVER} as {EMAIL_USER}")
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+    mail.login(EMAIL_USER, EMAIL_PASS)
+    mail.select("inbox")
 
-        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-        mail.login(EMAIL_USER, EMAIL_PASS)
-        mail.select("inbox")
+    status, messages = mail.search(None, 'UNSEEN')
+    print(f"🔍 IMAP search status: {status}")
+    print(f"📧 Found messages: {messages}")
 
-        _, messages = mail.search(None, 'UNSEEN')
-        message_ids = messages[0].split()
+    message_ids = messages[0].split()
 
         if not message_ids:
             print("🚫 No unread emails with resumes found.")
