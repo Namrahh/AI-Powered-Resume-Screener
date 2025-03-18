@@ -1,64 +1,68 @@
-import gradio as gr
 import os
-from pyngrok import ngrok
+import gradio as gr
 from resume_parser import parse_resumes
 from similarity import compute_similarity
 from utils import remove_duplicate_resumes, merge_resumes
 from email_fetch import fetch_email_resumes
 
-# Function to handle email fetching + file upload
-def process_resumes(email, password, job_description, uploaded_files):
-    resumes = []
+# 🔹 Function to process resumes
+def process_resumes(job_description, threshold, hr_email, uploaded_resumes):
+    # 🔹 Fetch resumes from HR email (if provided)
+    email_resumes = fetch_email_resumes(hr_email) if hr_email else []
 
-    # If HR enters email & password, fetch resumes from email
-    if email and password:
-        email_resumes = fetch_email_resumes(email, password)
-        resumes.extend(email_resumes)  
+    # 🔹 Save uploaded resumes to "resume_documents" folder
+    uploaded_resumes = uploaded_resumes or []
+    upload_folder = "resume_documents"
+    os.makedirs(upload_folder, exist_ok=True)
+    for file_path in uploaded_resumes:
+        os.rename(file_path, os.path.join(upload_folder, os.path.basename(file_path)))
 
-    # If HR uploads files, process them
-    if uploaded_files:
-        uploaded_paths = [file.name for file in uploaded_files]
-        resumes.extend(uploaded_paths)
+    # 🔹 Merge resumes from multiple sources
+    merge_resumes(["resume_documents"], "resume_documents")
 
-    if not resumes:
-        return "No resumes found. Please upload or fetch from email."
-
-    # Merge resumes into a single folder
-    merge_resumes(resumes, "resume_documents")
-
-    # Remove duplicates
+    # 🔹 Remove duplicate resumes
     unique_resumes = remove_duplicate_resumes("resume_documents")
 
-    # Parse resumes
+    # 🔹 Parse resumes
     fixed_resumes = parse_resumes(unique_resumes)
 
-    # Compute similarity
-    shortlisted = compute_similarity(job_description, fixed_resumes, 0.4)
+    # 🔹 Compute similarity scores
+    shortlisted = compute_similarity(job_description, fixed_resumes, threshold)
 
-    # Format output
-    return [(res[0], f"{res[1]*100:.2f}%") for res in shortlisted[:5]]  # Convert score to percentage
+    # 🔹 Format results
+    results = "\n".join([f"📄 {res[0]} | Score: {res[1]:.4f} | Path: {res[2]}" for res in shortlisted[:5]])
 
-# Define Gradio UI
-demo = gr.Interface(
-    fn=process_resumes,
-    inputs=[
-        gr.Textbox(label="HR Email Address", placeholder="Optional: Enter email to fetch resumes"),
-        gr.Textbox(label="HR Email Password", type="password", placeholder="Optional: Enter password"),
-        gr.Textbox(lines=4, label="Job Description", placeholder="Enter job requirements here..."),
-        gr.File(file_types=[".pdf", ".docx"], label="Upload Resumes", multiple=True)
-    ],
-    outputs=gr.Dataframe(headers=["Resume", "Similarity Score"]),
-    title="AI Resume Screener",
-    description="Upload resumes or fetch them via email, then shortlist candidates based on similarity."
-)
+    return results if results else "No suitable candidates found."
 
-# Open a tunnel to the Gradio app
-port = int(os.getenv("PORT", 7860))  # Use PORT from environment variables or default to 7860
-public_url = ngrok.connect(port).public_url
-print(f"🌍 Public URL: {public_url}")
+# ✅ Gradio Web App
+with gr.Blocks() as app:
+    gr.Markdown("# 📝 AI-Powered Resume Screener")
 
-# Launch Gradio app
-demo.launch(server_name="0.0.0.0", server_port=port)
+    # 🔹 HR Email Input
+    hr_email = gr.Textbox(label="HR Email (optional)", placeholder="Enter HR email for fetching resumes")
+
+    # 🔹 Job Description Input
+    job_desc = gr.Textbox(label="Enter Job Description", lines=5, placeholder="Enter job requirements here...")
+
+    # 🔹 Similarity Threshold Slider
+    threshold = gr.Slider(minimum=0.1, maximum=1.0, value=0.4, label="Similarity Threshold")
+
+    # 🔹 Upload Resumes from Computer
+    uploaded_resumes = gr.File(label="Upload Resumes (PDF/DOCX)", type="file", interactive=True, file_types=[".pdf", ".docx"])
+
+    # 🔹 Submit Button
+    submit_btn = gr.Button("Analyze Resumes")
+
+    # 🔹 Output Display
+    output_text = gr.Textbox(label="Shortlisted Candidates", interactive=False)
+
+    # 🔹 Click Event
+    submit_btn.click(process_resumes, inputs=[job_desc, threshold, hr_email, uploaded_resumes], outputs=output_text)
+
+# ✅ Deploy on Railway (Uses the correct port)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 7860))  # Railway assigns a dynamic port
+    app.launch(server_name="0.0.0.0", server_port=port)
 
 
 
