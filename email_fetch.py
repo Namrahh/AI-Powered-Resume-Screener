@@ -18,6 +18,8 @@ def fetch_email_resumes():
 
     resume_files = []
     try:
+        print(f"🔍 Connecting to {IMAP_SERVER} as {EMAIL_USER}")
+
         mail = imaplib.IMAP4_SSL(IMAP_SERVER)
         mail.login(EMAIL_USER, EMAIL_PASS)
         mail.select("inbox")
@@ -33,14 +35,19 @@ def fetch_email_resumes():
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
                         msg = email.message_from_bytes(response_part[1])
+
                         for part in msg.walk():
-                            if part.get_content_maintype() == "multipart":
-                                continue
-                            if part.get("Content-Disposition") is None:
-                                continue
+                            print(f"🔍 Content Type: {part.get_content_type()}")
+                            print(f"🔍 Content Disposition: {part.get('Content-Disposition')}")
+                            print(f"🔍 Filename: {part.get_filename()}")
 
                             filename = part.get_filename()
-                            if filename and filename.lower().endswith((".pdf", ".doc", ".docx")):
+                            if filename:
+                                filename = filename.replace("\n", "").strip()
+                            else:
+                                filename = "Unknown_File"
+
+                            if filename.lower().endswith((".pdf", ".doc", ".docx")):
                                 filepath = os.path.join(SAVE_FOLDER, filename)
 
                                 with open(filepath, "wb") as f:
