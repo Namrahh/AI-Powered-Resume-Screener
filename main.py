@@ -48,5 +48,6 @@ with gr.Blocks() as demo:
     process_button.click(process_resumes, inputs=[job_desc_input], outputs=[output])
 
 # Launch UI
-demo.launch()
+demo.launch(server_name="0.0.0.0", server_port=7860)
+
 
