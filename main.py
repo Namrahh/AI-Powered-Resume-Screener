@@ -48,7 +48,7 @@ with gr.Blocks() as app:
     threshold = gr.Slider(minimum=0.1, maximum=1.0, value=0.4, label="Similarity Threshold")
 
     # 🔹 Upload Resumes from Computer
-    uploaded_resumes = gr.File(label="Upload Resumes (PDF/DOCX)", type="file", interactive=True, file_types=[".pdf", ".docx"])
+    uploaded_resumes = gr.File(label="Upload Resumes (PDF/DOCX)", type="file", interactive=True)
 
     # 🔹 Submit Button
     submit_btn = gr.Button("Analyze Resumes")
@@ -62,7 +62,8 @@ with gr.Blocks() as app:
 # ✅ Deploy on Railway (Uses the correct port)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))  # Railway assigns a dynamic port
-    app.launch(server_name="0.0.0.0", server_port=port)
+    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+
 
 
 
