@@ -7,7 +7,7 @@ scikit-learn==1.2.0
 torch==2.0.0
 python-dotenv==1.0.0
 spacy==3.7.0
-huggingface_hub==0.14.1
+huggingface_hub
 transformers
 
 
