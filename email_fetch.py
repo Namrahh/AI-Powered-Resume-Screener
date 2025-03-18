@@ -13,19 +13,25 @@ SAVE_FOLDER = "resume_documents"
 
 def fetch_email_resumes():
     """Fetch resume attachments from unread emails."""
+    
+    # 🚨 Debugging: Check if email variables are loaded
+    print(f"🔍 EMAIL_USER: {EMAIL_USER}")
+    print(f"🔍 EMAIL_PASS: {EMAIL_PASS}")
+
+    if not EMAIL_USER or not EMAIL_PASS:
+        print("❌ EMAIL_USER or EMAIL_PASS is missing! Check your .env file.")
+        return []
+
     if not os.path.exists(SAVE_FOLDER):
         os.makedirs(SAVE_FOLDER)
 
     resume_files = []
-    try:  # ← Make sure this is followed by indented code
+    try:
         mail = imaplib.IMAP4_SSL(IMAP_SERVER)
         mail.login(EMAIL_USER, EMAIL_PASS)
         mail.select("inbox")
 
-        status, messages = mail.search(None, 'UNSEEN')
-        print(f"🔍 IMAP search status: {status}")
-        print(f"📧 Found messages: {messages}")
-
+        _, messages = mail.search(None, 'UNSEEN')
         message_ids = messages[0].split()
 
         if not message_ids:
@@ -53,7 +59,7 @@ def fetch_email_resumes():
                                 resume_files.append(filepath)
 
         mail.logout()
-    except Exception as e:  # ← Exception handling must also be indented properly
+    except Exception as e:
         print(f"❌ Error fetching emails: {e}")
 
     return resume_files
