@@ -3,6 +3,8 @@ import pdfplumber
 import docx
 import hashlib
 import shutil
+import imaplib
+import email
 
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF file."""
@@ -78,3 +80,46 @@ def save_uploaded_resumes(uploaded_files, save_dir="resume_documents"):
         saved_paths.append(file_path)
     
     return saved_paths
+
+
+def download_resumes_from_email(email_user, email_pass, download_folder="resume_documents"):
+    """Fetch resumes from email and save them locally."""
+    try:
+        # Connect to Gmail
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(email_user, email_pass)
+        mail.select("inbox")
+
+        # Search for emails with attachments
+        result, data = mail.search(None, 'ALL')
+        email_ids = data[0].split()
+
+        if not os.path.exists(download_folder):
+            os.makedirs(download_folder)
+
+        count = 0
+        for email_id in email_ids:
+            result, msg_data = mail.fetch(email_id, "(RFC822)")
+            raw_email = msg_data[0][1]
+            msg = email.message_from_bytes(raw_email)
+
+            for part in msg.walk():
+                if part.get_content_maintype() == "multipart":
+                    continue
+
+                # Check if it's an attachment
+                if part.get("Content-Disposition") is not None:
+                    filename = part.get_filename()
+                    if filename and (filename.endswith(".pdf") or filename.endswith(".docx")):
+                        filepath = os.path.join(download_folder, filename)
+                        with open(filepath, "wb") as f:
+                            f.write(part.get_payload(decode=True))
+
+                        count += 1
+
+        mail.logout()
+        return count > 0  # Return True if resumes were downloaded
+
+    except Exception as e:
+        print(f"❌ Error fetching emails: {e}")
+        return False
