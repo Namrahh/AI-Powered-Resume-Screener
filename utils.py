@@ -66,3 +66,15 @@ def merge_resumes(source_folders, destination_folder):
                     print(f"✅ Merged: {filename}")
                 else:
                     print(f"⚠️ Duplicate skipped: {filename}")
+def save_uploaded_resumes(uploaded_files, save_dir="resume_documents"):
+    """Save uploaded resumes to a directory."""
+    os.makedirs(save_dir, exist_ok=True)
+    
+    saved_paths = []
+    for uploaded_file in uploaded_files:
+        file_path = os.path.join(save_dir, uploaded_file.name)
+        with open(file_path, "wb") as f:
+            shutil.copyfileobj(uploaded_file, f)
+        saved_paths.append(file_path)
+    
+    return saved_paths
