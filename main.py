@@ -1,7 +1,7 @@
 import gradio as gr
 import os
 import concurrent.futures
-from resume_parser import parse_resume
+from resume_parser import parse_resumes
 from similarity import compute_similarity
 from utils import remove_duplicate_resumes, save_uploaded_resumes
 from email_fetch import fetch_email_resumes
