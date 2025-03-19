@@ -59,7 +59,11 @@ with gr.Blocks() as app:
     job_description = gr.Textbox(label="Enter Job Description", lines=5)
 
     # 🔹 Upload Resumes (Multiple Files Allowed)
-    upload_button = gr.File(label="Upload Resumes", file_types=[".pdf", ".doc", ".docx"], type="file", interactive=True, multiple=True)
+   upload_button = gr.File(
+    label="Upload Resumes", 
+    file_types=[".pdf", ".doc", ".docx"],  # ✅ Keep this
+    interactive=True  # ✅ Keep this
+)
 
     # 🔹 Process Button
     process_button = gr.Button("Process Resumes")
