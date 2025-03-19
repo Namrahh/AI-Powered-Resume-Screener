@@ -21,9 +21,20 @@ def save_shortlisted_resumes(shortlisted, destination_folder=SHORTLISTED_FOLDER)
     
     return shortlisted_files
 
+import socket
+
+def is_imap_port_open():
+    """Check if IMAP (port 993) is open on the server."""
+    test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = test_socket.connect_ex(("imap.gmail.com", 993))
+    return result == 0
+    
 def process_resumes(email, password, job_description, uploaded_resumes):
     """Processes resumes from email and uploaded files, then shortlists candidates."""
-    
+
+    if not is_imap_port_open():
+        return ["❌ IMAP (Port 993) is blocked on this server. Email fetching won't work."], []
+
     # 🔹 Fetch resumes from email
     email_resumes = download_resumes_from_email(email, password)
 
