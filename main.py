@@ -6,6 +6,11 @@ from similarity import compute_similarity
 from utils import remove_duplicate_resumes, merge_resumes
 from email_fetch import fetch_email_resumes
 
+# ✅ Get Email Credentials Securely from Railway Environment Variables
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
+EMAIL_FOLDER = "INBOX"
+
 UPLOAD_FOLDER = "uploaded_resumes"
 SHORTLIST_FOLDER = "shortlisted_resumes"
 
@@ -13,14 +18,15 @@ SHORTLIST_FOLDER = "shortlisted_resumes"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(SHORTLIST_FOLDER, exist_ok=True)
 
+# Function to process resumes
 def process_resumes(job_description, uploaded_files):
     resumes_list = []
     
     # 1️⃣ **Fetch resumes from email**
-    email_resumes = fetch_email_resumes()
+    email_resumes = fetch_email_resumes(EMAIL_USER, EMAIL_PASS, EMAIL_FOLDER)
     resumes_list.extend(email_resumes)
     
-    # 2️⃣ **Save uploaded files**
+    # 2️⃣ **Save uploaded files (Supports multiple uploads)**
     if uploaded_files:
         for file in uploaded_files:
             file_path = os.path.join(UPLOAD_FOLDER, file.name)
@@ -56,7 +62,7 @@ with gr.Blocks() as app:
     job_description = gr.Textbox(label="Enter Job Description", lines=3)
 
     with gr.Row():
-        upload_button = gr.File(label="Upload Resumes", file_types=[".pdf", ".doc", ".docx"], multiple=True)
+        upload_button = gr.File(label="Upload Resumes", file_types=[".pdf", ".doc", ".docx"], type="file", multiple=True)
         fetch_email_button = gr.Button("Fetch from Emails")
     
     process_button = gr.Button("Process Resumes")
@@ -70,3 +76,4 @@ with gr.Blocks() as app:
 # **Deploy with Public URL**
 if __name__ == "__main__":
     app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)), share=True)
+
