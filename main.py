@@ -100,5 +100,6 @@ with gr.Blocks() as app:
 # 🚀 **Launch App**
 if __name__ == "__main__":
     check_imap_port()  # Check IMAP port availability before launching
-    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)), share=True)
+
 
