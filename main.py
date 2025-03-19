@@ -59,11 +59,7 @@ with gr.Blocks() as app:
     job_description = gr.Textbox(label="Enter Job Description", lines=5)
 
     # 🔹 Upload Resumes (Multiple Files Allowed)  ✅ Fixed indentation here
-    upload_button = gr.File(
-        label="Upload Resumes", 
-        file_types=[".pdf", ".doc", ".docx"],  # ✅ Keep this
-        interactive=True  # ✅ Keep this
-    )
+    upload_button = gr.File(label="Upload Resumes", interactive=True)
 
     # 🔹 Process Button
     process_button = gr.Button("Process Resumes")
@@ -83,4 +79,5 @@ with gr.Blocks() as app:
 
 # 🚀 Launch App
 if __name__ == "__main__":
-    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)), share=True)
+    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+
