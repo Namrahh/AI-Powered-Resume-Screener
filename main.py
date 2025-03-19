@@ -3,33 +3,31 @@ import os
 import concurrent.futures
 from resume_parser import parse_resumes
 from similarity import compute_similarity
-from utils import remove_duplicate_resumes, save_uploaded_resumes
-from email_fetch import fetch_email_resumes
+from utils import remove_duplicate_resumes, save_uploaded_resumes, download_resumes_from_email
 
 def process_resumes(email, password, job_description, uploaded_resumes):
     """
     Processes resumes from uploaded files and emails, then shortlists candidates based on job description.
     """
 
-    # 🔹 Fetch resumes from email (Parallel Processing)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_email_resumes = executor.submit(fetch_email_resumes, email, password)
-        email_resumes = future_email_resumes.result()
+    # 🔹 Fetch resumes from email
+    email_resumes = download_resumes_from_email(email, password)
 
-    # 🔹 Save uploaded resumes efficiently
+    # 🔹 Save uploaded resumes
     uploaded_paths = save_uploaded_resumes(uploaded_resumes)
 
     # 🔹 Merge email & uploaded resumes, then remove duplicates
     all_resumes = remove_duplicate_resumes(email_resumes + uploaded_paths)
 
-    # 🔹 Parse resumes in parallel (Faster Processing)
+    # 🔹 Parse resumes in parallel
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        parsed_resumes = list(executor.map(parse_resume, all_resumes))
+        parsed_resumes = list(executor.map(parse_resumes, all_resumes))
 
     # 🔹 Compute similarity scores
     shortlisted = compute_similarity(job_description, parsed_resumes, threshold=0.4)
 
-    return [f"📄 {res[0]} | Score: {res[1]:.4f}" for res in shortlisted[:5]]
+    # 🔹 Return top 5 shortlisted candidates
+    return [f"📄 {res['filename']} | Score: {res['score']:.4f}" for res in shortlisted[:5]]
 
 # 🎨 UI with Gradio
 with gr.Blocks() as app:
@@ -61,4 +59,3 @@ with gr.Blocks() as app:
 # 🚀 Launch App
 if __name__ == "__main__":
     app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)), share=True)
-
