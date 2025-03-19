@@ -1,15 +1,29 @@
 import gradio as gr
 import os
 import concurrent.futures
+import shutil
 from resume_parser import parse_resumes
 from similarity import compute_similarity
 from utils import remove_duplicate_resumes, save_uploaded_resumes, download_resumes_from_email
 
-def process_resumes(email, password, job_description, uploaded_resumes):
-    """
-    Processes resumes from uploaded files and emails, then shortlists candidates based on job description.
-    """
+SHORTLISTED_FOLDER = "shortlisted_resumes"
 
+def save_shortlisted_resumes(shortlisted, destination_folder=SHORTLISTED_FOLDER):
+    """Save shortlisted resumes to a separate folder for downloading."""
+    os.makedirs(destination_folder, exist_ok=True)
+    shortlisted_files = []
+    
+    for res in shortlisted:
+        source_path = res["filepath"]
+        destination_path = os.path.join(destination_folder, os.path.basename(source_path))
+        shutil.copy(source_path, destination_path)
+        shortlisted_files.append(destination_path)
+    
+    return shortlisted_files
+
+def process_resumes(email, password, job_description, uploaded_resumes):
+    """Processes resumes from email and uploaded files, then shortlists candidates."""
+    
     # 🔹 Fetch resumes from email
     email_resumes = download_resumes_from_email(email, password)
 
@@ -26,8 +40,12 @@ def process_resumes(email, password, job_description, uploaded_resumes):
     # 🔹 Compute similarity scores
     shortlisted = compute_similarity(job_description, parsed_resumes, threshold=0.4)
 
-    # 🔹 Return top 5 shortlisted candidates
-    return [f"📄 {res['filename']} | Score: {res['score']:.4f}" for res in shortlisted[:5]]
+    # 🔹 Save shortlisted resumes to a folder for downloading
+    shortlisted_files = save_shortlisted_resumes(shortlisted)
+
+    # 🔹 Return formatted shortlist & paths for download
+    shortlist_text = [f"📄 {res['filename']} | Score: {res['score']:.4f}" for res in shortlisted[:5]]
+    return shortlist_text, shortlisted_files  # Returns text & file paths for download
 
 # 🎨 UI with Gradio
 with gr.Blocks() as app:
@@ -49,11 +67,14 @@ with gr.Blocks() as app:
     # 🔹 Output Section
     output = gr.Textbox(label="Shortlisted Candidates", interactive=False)
 
+    # 🔹 Download Button
+    download_files = gr.File(label="📥 Download Shortlisted Resumes", interactive=True, type="file", multiple=True)
+
     # 🔹 Button Click Event
     process_button.click(
         process_resumes,  
         inputs=[email_input, password_input, job_description, upload_button],  
-        outputs=[output]
+        outputs=[output, download_files]  # Now downloads shortlisted resumes
     )
 
 # 🚀 Launch App
