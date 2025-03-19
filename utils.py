@@ -82,44 +82,46 @@ def save_uploaded_resumes(uploaded_files, save_dir="resume_documents"):
     return saved_paths
 
 
-def download_resumes_from_email(email_user, email_pass, download_folder="resume_documents"):
-    """Fetch resumes from email and save them locally."""
+def download_resumes_from_email(email, password):
+    """Fetch resumes from email and return file paths."""
     try:
-        # Connect to Gmail
+        print(f"📩 Attempting to log in as: {email}")
+        
         mail = imaplib.IMAP4_SSL("imap.gmail.com")
-        mail.login(email_user, email_pass)
+        mail.login(email, password)
         mail.select("inbox")
 
-        # Search for emails with attachments
-        result, data = mail.search(None, 'ALL')
-        email_ids = data[0].split()
+        status, messages = mail.search(None, 'ALL')
+        print(f"📬 Email Fetch Status: {status}")
+        if status != "OK":
+            print("❌ Error fetching emails")
+            return []
 
-        if not os.path.exists(download_folder):
-            os.makedirs(download_folder)
+        email_ids = messages[0].split()
+        print(f"📄 Found {len(email_ids)} emails")
 
-        count = 0
+        resume_files = []
         for email_id in email_ids:
-            result, msg_data = mail.fetch(email_id, "(RFC822)")
-            raw_email = msg_data[0][1]
-            msg = email.message_from_bytes(raw_email)
+            status, msg_data = mail.fetch(email_id, '(RFC822)')
+            if status != "OK":
+                continue
 
-            for part in msg.walk():
-                if part.get_content_maintype() == "multipart":
-                    continue
-
-                # Check if it's an attachment
-                if part.get("Content-Disposition") is not None:
-                    filename = part.get_filename()
-                    if filename and (filename.endswith(".pdf") or filename.endswith(".docx")):
-                        filepath = os.path.join(download_folder, filename)
-                        with open(filepath, "wb") as f:
-                            f.write(part.get_payload(decode=True))
-
-                        count += 1
-
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    email_message = email.message_from_bytes(response_part[1])
+                    for part in email_message.walk():
+                        if part.get_content_maintype() == "multipart":
+                            continue
+                        filename = part.get_filename()
+                        if filename and filename.lower().endswith(('.pdf', '.doc', '.docx')):
+                            filepath = os.path.join("email_resumes", filename)
+                            with open(filepath, "wb") as f:
+                                f.write(part.get_payload(decode=True))
+                            resume_files.append(filepath)
+        
         mail.logout()
-        return count > 0  # Return True if resumes were downloaded
-
+        print(f"✅ Resumes downloaded: {resume_files}")
+        return resume_files
     except Exception as e:
-        print(f"❌ Error fetching emails: {e}")
-        return False
+        print(f"❌ Error fetching resumes: {e}")
+        return []
